@@ -1,0 +1,6 @@
+{
+  "name": "AliMedia",
+  "description": "A modern discovery platform and verified registry for Sri Lankan domesticated elephants and tuskers (හීලෑ අලි සහ ඇත්තු).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

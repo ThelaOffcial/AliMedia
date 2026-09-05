@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny - nothing is accessible unless explicitly allowed below.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // An admin is any signed-in Firebase Auth user whose UID has a document
+    // in /admins. To make someone an admin: create their account under
+    // Firebase Console > Authentication (Email/Password), copy their UID,
+    // then create a document at /admins/{that-uid} with any field (e.g. { role: "admin" }).
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Admin allowlist. Nobody may write to this from the client - it must be
+    // managed directly from the Firebase Console for security.
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Public read for the elephant registry. Only admins may create, edit or
+    // delete elephant records.
+    match /elephants/{elephantId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Community-submitted photos/stories. Anyone (including guests) may post,
+    // but only the original author or an admin may edit/remove a post.
+    match /elephant_posts/{postId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin() ||
+        (request.auth != null && request.auth.uid == resource.data.authorUid);
+    }
+
+    // Cultural events / notices - public read, admin-only write.
+    match /cultural_events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // User profiles - a user may manage their own profile; admins may manage any.
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        (request.auth.uid == userId || isAdmin());
+    }
+
+    // Real-time visitor presence pings - low risk, world-writable.
+    match /visitors/{visitorId} {
+      allow read, write: if true;
+    }
+  }
+}

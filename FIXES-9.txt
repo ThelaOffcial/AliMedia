@@ -1,0 +1,13 @@
+Nine logic fixes (verified tsc + vite build)
+============================================
+1. elephantService.toggleCulturalEventLike — likedBy map + _empty sentinel
+2. commentModeration.moderateCommentText — word-boundary + allowlist
+3. commentService.approveModerationItem — restores displayText from text
+4. App.tsx showNotification — single tracked timeout + token
+5. elephantService.getCulturalEvents — timeout 2s → 10s
+6. elephantService.deleteElephantCascade — exact name/id match
+7. userService.deleteUserAccount — photos, post_likes, username index
+8. database.rules visitors + presenceService — own id / user_{uid}, stronger ids
+9. comment rate — lastCommentAt + RTDB validate min 5s; localStorage UX only
+
+MUST publish database.rules.json to Firebase after deploy.

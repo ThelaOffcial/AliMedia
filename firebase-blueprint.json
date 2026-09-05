@@ -1,0 +1,187 @@
+{
+  "entities": {
+    "Elephant": {
+      "title": "Elephant",
+      "description": "A domesticated elephant or tusker registered in Sri Lanka",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Primary name of the elephant"
+        },
+        "sinhalaName": {
+          "type": "string",
+          "description": "Sinhala script name"
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["male", "female"]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["tusker", "elephant"]
+        },
+        "location": {
+          "type": "string"
+        },
+        "organization": {
+          "type": "string"
+        },
+        "verified": {
+          "type": "boolean"
+        },
+        "followerCount": {
+          "type": "number"
+        }
+      },
+      "required": ["name", "type", "gender"]
+    },
+    "ElephantPost": {
+      "title": "ElephantPost",
+      "description": "Community user-uploaded photo and post for an elephant profile",
+      "type": "object",
+      "properties": {
+        "elephantId": {
+          "type": "string"
+        },
+        "elephantName": {
+          "type": "string"
+        },
+        "photoUrl": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "authorName": {
+          "type": "string"
+        },
+        "authorUsername": {
+          "type": "string"
+        }
+      },
+      "required": ["elephantId", "photoUrl", "authorUsername"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Public profile and followings for an authenticated user",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        },
+        "photoURL": {
+          "type": "string"
+        },
+        "followedElephants": {
+          "type": "array"
+        }
+      },
+      "required": ["uid", "email"]
+    },
+    "CulturalEvent": {
+      "title": "CulturalEvent",
+      "description": "Perahera and general notifications, updates, and alerts with cover images",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "sinhalaTitle": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "participatingElephants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "coverImage": {
+          "type": "string"
+        }
+      },
+      "required": ["title", "location", "date"]
+    },
+    "VisitorInfo": {
+      "title": "VisitorInfo",
+      "description": "Real-time website visitor presence tracking",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "sessionStart": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastActive": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "displayName", "email"]
+    }
+  },
+  "firestore": {
+    "/elephants/{elephantId}": {
+      "schema": {
+        "$ref": "#/entities/Elephant"
+      },
+      "description": "Public registry of domesticated elephants"
+    },
+    "/elephant_posts/{postId}": {
+      "schema": {
+        "$ref": "#/entities/ElephantPost"
+      },
+      "description": "Community user-submitted posts and photos tagged to elephants"
+    },
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "User profiles and followed elephants list"
+    },
+    "/cultural_events/{eventId}": {
+      "schema": {
+        "$ref": "#/entities/CulturalEvent"
+      },
+      "description": "Perahera calendar and cultural events notices"
+    },
+    "/visitors/{visitorId}": {
+      "schema": {
+        "$ref": "#/entities/VisitorInfo"
+      },
+      "description": "Real-time presence tracking of active site visitors"
+    }
+  }
+}

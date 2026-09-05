@@ -1,0 +1,127 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "elephants": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null && root.child('admins').child(auth.uid).exists()",
+        ".validate": "newData.hasChildren(['name', 'gender', 'type']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 120"
+      }
+    },
+    "elephant_posts": {
+      ".read": true,
+      "$postId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('suspended').val() !== true) && ((!data.exists() && newData.exists() && newData.child('authorUid').val() === auth.uid) || (data.exists() && newData.exists() && (data.child('authorUid').val() === auth.uid || root.child('admins').child(auth.uid).exists())) || (data.exists() && !newData.exists() && (data.child('authorUid').val() === auth.uid || root.child('admins').child(auth.uid).exists())))",
+        ".validate": "!newData.exists() || (newData.hasChild('authorUid') && newData.child('authorUid').isString() && newData.child('authorUid').val().length > 0 && newData.hasChild('photoUrl') && newData.child('photoUrl').isString() && newData.child('photoUrl').val().length > 0 && newData.child('photoUrl').val().length <= 2500 && (newData.child('photoUrl').val().beginsWith('https://') || (data.exists() && newData.child('photoUrl').val() === data.child('photoUrl').val())) && (!data.exists() || newData.child('authorUid').val() === data.child('authorUid').val()))"
+      }
+    },
+    "cultural_events": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+      }
+    },
+    "users": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())",
+        ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || (auth.uid === $uid && root.child('users').child(auth.uid).child('suspended').val() !== true))",
+        ".validate": "newData.hasChildren(['uid']) && newData.child('uid').val() === $uid",
+        "suspended": {
+          ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+        }
+      }
+    },
+    "usernames": {
+      ".read": true,
+      "$handle": {
+        ".write": "auth != null && ((!newData.exists() && data.child('uid').val() === auth.uid) || (newData.exists() && newData.child('uid').val() === auth.uid && $handle.matches(/^[a-z0-9._]{2,32}$/)))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['uid', 'username']) && newData.child('uid').isString() && newData.child('username').isString())"
+      }
+    },
+    "admins": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": false
+      }
+    },
+    "visitors": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$id": {
+        ".write": "auth != null && auth.uid === $id",
+        ".validate": "newData.hasChildren(['id']) && newData.child('id').val() === $id"
+      }
+    },
+    "elephant_likes": {
+      ".read": true,
+      "$elephantId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['likesCount', 'likedBy']) && newData.child('likesCount').isNumber() && newData.child('likesCount').val() >= 0"
+      }
+    },
+    "post_likes": {
+      ".read": true,
+      "$postId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['likesCount', 'likedBy']) && newData.child('likesCount').isNumber() && newData.child('likesCount').val() >= 0"
+      }
+    },
+    "event_likes": {
+      ".read": true,
+      "$eventId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['likesCount', 'likedBy']) && newData.child('likesCount').isNumber() && newData.child('likesCount').val() >= 0"
+      }
+    },
+    "post_comments": {
+      ".read": true,
+      "$postId": {
+        "$commentId": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('suspended').val() !== true && ((!data.exists() && newData.child('authorUid').val() === auth.uid) || (data.exists() && (data.child('authorUid').val() === auth.uid || root.child('admins').child(auth.uid).exists())))",
+          ".validate": "!newData.exists() || (newData.hasChild('authorUid') && newData.hasChild('text') && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 500 && (newData.child('authorUid').val() === auth.uid || root.child('admins').child(auth.uid).exists()) && (!newData.hasChild('status') || newData.child('status').val() === 'visible' || newData.child('status').val() === 'pending' || newData.child('status').val() === 'removed') && (!data.exists() || (newData.child('authorUid').val() === data.child('authorUid').val() && newData.child('postId').val() === data.child('postId').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('parentId').val() === data.child('parentId').val())))"
+        }
+      }
+    },
+    "moderation_queue": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$id": {
+        ".write": "auth != null && ((!data.exists() && newData.hasChild('type') && (newData.child('authorUid').val() === auth.uid || ((newData.child('type').val() === 'user_report' || newData.child('type').val() === 'post_report') && newData.child('reportedBy').val() === auth.uid))) || root.child('admins').child(auth.uid).exists())",
+        ".validate": "!newData.exists() || (newData.hasChild('type') && (newData.child('type').val() === 'comment' || newData.child('type').val() === 'user_report' || newData.child('type').val() === 'post_report'))"
+      },
+      ".indexOn": [
+        "commentId",
+        "postId"
+      ]
+    },
+    "user_bookmarks": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && !newData.exists()",
+        "$postId": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "!newData.exists() || (newData.hasChild('postId') && newData.hasChild('savedAt'))"
+        }
+      }
+    },
+    "user_notifications": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists()) && !newData.exists()",
+        "$nid": {
+          ".write": "auth != null && ((!data.exists() && newData.child('fromUid').val() === auth.uid && newData.hasChild('type')) || auth.uid === $uid || root.child('admins').child(auth.uid).exists())",
+          ".validate": "!newData.exists() || (newData.hasChild('type') && newData.hasChild('createdAt'))"
+        }
+      }
+    },
+    "translations_cache": {
+      ".read": true,
+      "$target": {
+        "$hash": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['translated','updatedAt']) && newData.child('translated').isString() && newData.child('translated').val().length <= 6000 && newData.child('updatedAt').isNumber()"
+        }
+      }
+    }
+  }
+}
