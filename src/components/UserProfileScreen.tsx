@@ -28,7 +28,6 @@ import {
 import { VerifiedBadge } from './VerifiedBadge';
 import { isAliMediaTeamEmail, ALI_MEDIA_LOGO_URL, ALI_MEDIA_DISPLAY_NAME } from '../utils/aliMediaTeam';
 import { ElephantIcon } from './ElephantIcon';
-import { LOGO_URL } from './Navbar';
 import { compressImageFile } from '../utils/imageCompressor';
 import { uploadPhotoToCloudinary } from '../firebase/cloudinaryService';
 import {
@@ -386,7 +385,7 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
         <div className="bg-[#062E22] rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden text-center space-y-4">
           <div className="relative mx-auto w-20 h-20 rounded-full p-1 bg-white/20 shadow-2xl flex items-center justify-center">
             <div className="w-full h-full rounded-full bg-black flex items-center justify-center p-2">
-              <img src={LOGO_URL} alt="Aliya Media" className="w-full h-full object-contain" />
+              <img src="/icons/alimedia-mark-white.png" alt="Ali Media" className="w-full h-full object-contain" />
             </div>
           </div>
 
