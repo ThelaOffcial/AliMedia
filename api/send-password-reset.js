@@ -87,10 +87,17 @@ export default async function handler(req, res) {
 
   let link;
   try {
-    link = await admin.auth().generatePasswordResetLink(email, {
+    const firebaseLink = await admin.auth().generatePasswordResetLink(email, {
       url: ACTION_URL,
-      handleCodeInApp: true,
     });
+    // We don't need Firebase's hosted action page at all — pull the oobCode
+    // out of its generated link and build our own URL pointing straight at
+    // ResetPasswordScreen. The client Firebase SDK validates oobCode
+    // directly against Firebase Auth, regardless of which domain carried it,
+    // so this works without needing the "Custom action URL" Console setting
+    // (which some projects can't edit).
+    const oobCode = new URL(firebaseLink).searchParams.get('oobCode');
+    link = `${ACTION_URL}?mode=resetPassword&oobCode=${encodeURIComponent(oobCode)}`;
   } catch (err) {
     // user-not-found, invalid-email, etc. — report generic success so we
     // don't reveal whether the email is registered (same behavior
