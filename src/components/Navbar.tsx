@@ -1,17 +1,16 @@
 import React from 'react';
-import { Shield, Globe, CircleUser, Moon, Sun, Megaphone, Compass, MessageCircle } from 'lucide-react';
+import { Globe, CircleUser, Moon, Sun, Megaphone, Compass, MessageCircle } from 'lucide-react';
 import { ElephantIcon } from './ElephantIcon';
 import { Language, translations } from '../utils/translations';
 import { useAuth } from '../firebase/authContext';
 
-export const LOGO_URL = 'https://i.ibb.co/WN3YG3gL/file-000000002f988208ab120789401f40f8.png';
+export const LOGO_URL = '/icons/alimedia-logo-lockup.png';
 
 interface NavbarProps {
   currentTab: 'home' | 'elephant' | 'notifications' | 'profile' | 'admin' | 'messages';
   onSelectTab: (tab: 'home' | 'elephant' | 'notifications' | 'profile' | 'admin' | 'messages') => void;
   language: Language;
   onToggleLanguage: () => void;
-  onOpenAdmin: () => void;
   darkMode: boolean;
   onToggleDarkMode: (e?: React.MouseEvent) => void;
   hasNewNotifications?: boolean;
@@ -24,7 +23,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectTab,
   language,
   onToggleLanguage,
-  onOpenAdmin,
   darkMode,
   onToggleDarkMode,
   hasNewNotifications = false,
@@ -166,14 +164,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>{language === 'si' ? 'සිංහල' : 'English'}</span>
           </button>
 
-          {/* Admin console button */}
-          <button
-            onClick={onOpenAdmin}
-            className="p-2 rounded-full bg-white dark:bg-[#121F1B] hover:bg-zinc-100 dark:hover:bg-[#1A2C27] border border-zinc-200 dark:border-emerald-900/40 text-zinc-600 dark:text-zinc-300 hover:text-[#062E22] dark:hover:text-amber-400 transition-colors cursor-pointer shadow-2xs"
-            title="Registry & Admin Console"
-          >
-            <Shield className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </header>

@@ -957,10 +957,6 @@ export default function App() {
         onSelectTab={handleTabChange}
         language={language}
         onToggleLanguage={toggleLanguage}
-        onOpenAdmin={() => {
-          setIsAdminOpen(true);
-          window.location.hash = 'admin';
-        }}
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
         hasNewNotifications={hasNewNotifications}
