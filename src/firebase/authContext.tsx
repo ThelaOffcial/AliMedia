@@ -11,7 +11,6 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile as firebaseUpdateProfile,
-  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from './config';
 import { UserProfile } from '../types/user';
@@ -271,7 +270,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Please enter your email address.');
     }
     try {
-      await sendPasswordResetEmail(auth, trimmed);
+      // Routed through our own Vercel serverless function
+      // (api/send-password-reset.js) instead of Firebase's built-in
+      // sendPasswordResetEmail, so the email uses our custom branded HTML
+      // template via Resend rather than Firebase's fixed plain-text template.
+      const res = await fetch('/api/send-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      if (!res.ok) {
+        throw new Error('Failed to send reset email.');
+      }
     } catch (err: any) {
       console.warn('Password reset error:', err);
       throw new Error(mapEmailAuthError(err));
