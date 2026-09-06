@@ -25,12 +25,22 @@ function buildEmailHtml({ appName, email, link }) {
     <tr><td align="center">
       <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.06);">
         <tr><td style="background-color:#062E22; padding:28px 40px; text-align:center;">
-          <img src="https://i.ibb.co/WN3YG3gL/file-000000002f988208ab120789401f40f8.png" alt="${appName}" width="140" style="display:inline-block; max-width:140px; height:auto;" />
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+            <td style="vertical-align:middle; padding-right:10px;">
+              <img src="https://alimedia.dualsyntax.com/icons/alimedia-mark-white.png" alt="${appName}" width="30" style="display:block; width:30px; height:auto;" />
+            </td>
+            <td style="vertical-align:middle;">
+              <span style="font-size:20px; font-weight:700; color:#ffffff; letter-spacing:0.3px;">${appName}</span>
+            </td>
+          </tr></table>
         </td></tr>
         <tr><td style="text-align:center; padding:40px 40px 0 40px;">
-          <div style="width:64px; height:64px; background-color:#e8f2ed; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;">
-            <img src="https://alimedia.dualsyntax.com/icons/alimedia-elephant.png" alt="" width="34" style="display:inline-block;" />
-          </div>
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td style="position:relative;">
+            <div style="width:64px; height:64px; background-color:#e8f2ed; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+              <img src="https://alimedia.dualsyntax.com/icons/alimedia-mark-color.png" alt="" width="36" style="display:inline-block;" />
+            </div>
+            <img src="https://alimedia.dualsyntax.com/icons/verify-badge.png" alt="Verified" width="20" style="position:absolute; bottom:-2px; right:-2px; display:block; border:2px solid #ffffff; border-radius:50%; background:#ffffff;" />
+          </td></tr></table>
         </td></tr>
         <tr><td style="padding:24px 40px 8px 40px; text-align:center;">
           <h1 style="margin:0; font-size:22px; color:#1a1a2e; font-weight:700;">Reset your password</h1>
