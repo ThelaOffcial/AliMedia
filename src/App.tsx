@@ -36,6 +36,9 @@ const UserProfileScreen = lazy(() =>
 const AdminPanel = lazy(() =>
   import('./components/AdminPanel').then((m) => ({ default: m.AdminPanel }))
 );
+const ResetPasswordScreen = lazy(() =>
+  import('./components/ResetPasswordScreen').then((m) => ({ default: m.ResetPasswordScreen }))
+);
 const CreatePostModal = lazy(() =>
   import('./components/CreatePostModal').then((m) => ({ default: m.CreatePostModal }))
 );
@@ -924,6 +927,18 @@ export default function App() {
     const freshEvents = await getCulturalEvents();
     setEvents(freshEvents);
   };
+
+  // Password reset links (from api/send-password-reset.js) land here with
+  // ?mode=resetPassword&oobCode=... attached. Intercept before anything else
+  // renders and show our own branded reset UI instead of the normal app.
+  const resetParams = new URLSearchParams(window.location.search);
+  if (resetParams.get('mode') === 'resetPassword' && resetParams.get('oobCode')) {
+    return (
+      <Suspense fallback={<ScreenFallback />}>
+        <ResetPasswordScreen oobCode={resetParams.get('oobCode') as string} />
+      </Suspense>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex flex-col font-sans antialiased selection:bg-emerald-900 transition-colors">

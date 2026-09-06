@@ -2,8 +2,12 @@ import admin from 'firebase-admin';
 
 const APP_NAME = 'AliMedia';
 const FROM_ADDRESS = `${APP_NAME} <noreply@alimedia.dualsyntax.com>`;
-// Where users land after clicking the reset link and setting a new password.
-const REDIRECT_URL = 'https://alimedia.dualsyntax.com/#profile';
+// Custom action handler: Firebase sends the user straight to this page with
+// ?mode=resetPassword&oobCode=... attached, instead of its own default
+// firebaseapp.com page. ResetPasswordScreen (src/components) reads those
+// params and completes the reset with our own branded UI.
+const ACTION_URL = 'https://alimedia.dualsyntax.com/';
+
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(
@@ -84,7 +88,8 @@ export default async function handler(req, res) {
   let link;
   try {
     link = await admin.auth().generatePasswordResetLink(email, {
-      url: REDIRECT_URL,
+      url: ACTION_URL,
+      handleCodeInApp: true,
     });
   } catch (err) {
     // user-not-found, invalid-email, etc. — report generic success so we
