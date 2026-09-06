@@ -24,12 +24,12 @@ function buildEmailHtml({ appName, email, link }) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f5f7; padding:40px 0;">
     <tr><td align="center">
       <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.06);">
-        <tr><td style="background-color:#1a1a2e; padding:32px 40px; text-align:center;">
-          <span style="color:#ffffff; font-size:22px; font-weight:700; letter-spacing:0.5px;">${appName}</span>
+        <tr><td style="background-color:#062E22; padding:28px 40px; text-align:center;">
+          <img src="https://i.ibb.co/WN3YG3gL/file-000000002f988208ab120789401f40f8.png" alt="${appName}" width="140" style="display:inline-block; max-width:140px; height:auto;" />
         </td></tr>
         <tr><td style="text-align:center; padding:40px 40px 0 40px;">
-          <div style="width:64px; height:64px; background-color:#eef1ff; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;">
-            <table role="presentation" width="64" height="64"><tr><td align="center" valign="middle" style="font-size:28px;">&#128273;</td></tr></table>
+          <div style="width:64px; height:64px; background-color:#e8f2ed; border-radius:50%; margin:0 auto; display:flex; align-items:center; justify-content:center;">
+            <img src="https://alimedia.dualsyntax.com/icons/alimedia-elephant.png" alt="" width="34" style="display:inline-block;" />
           </div>
         </td></tr>
         <tr><td style="padding:24px 40px 8px 40px; text-align:center;">
@@ -42,13 +42,13 @@ function buildEmailHtml({ appName, email, link }) {
           <p style="margin:12px 0 0 0; font-size:15px; font-weight:600; color:#1a1a2e;">${email}</p>
         </td></tr>
         <tr><td style="padding:32px 40px; text-align:center;">
-          <a href="${link}" style="background-color:#4f5df7; color:#ffffff; text-decoration:none; font-size:15px; font-weight:600; padding:14px 36px; border-radius:8px; display:inline-block;">
+          <a href="${link}" style="background-color:#062E22; color:#ffffff; text-decoration:none; font-size:15px; font-weight:600; padding:14px 36px; border-radius:8px; display:inline-block;">
             Reset Password
           </a>
         </td></tr>
         <tr><td style="padding:0 40px 32px 40px; text-align:center;">
           <p style="margin:0; font-size:13px; color:#9aa0b4; line-height:1.5;">Button not working? Copy and paste this link into your browser:</p>
-          <p style="margin:8px 0 0 0; font-size:13px; word-break:break-all;"><a href="${link}" style="color:#4f5df7; text-decoration:none;">${link}</a></p>
+          <p style="margin:8px 0 0 0; font-size:13px; word-break:break-all;"><a href="${link}" style="color:#062E22; text-decoration:none;">${link}</a></p>
         </td></tr>
         <tr><td style="padding:0 40px;"><hr style="border:none; border-top:1px solid #eceef2; margin:0;"></td></tr>
         <tr><td style="padding:24px 40px 8px 40px; text-align:center;">
