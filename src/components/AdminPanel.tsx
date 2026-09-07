@@ -2764,11 +2764,11 @@ function PostsTab({ posts }: { posts: ElephantPost[] }) {
                     <Heart className="w-3 h-3 text-red-500" /> {likes}
                   </div>
                 </div>
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2 right-2 flex gap-1">
                   <button
                     type="button"
                     onClick={() => openEdit(post)}
-                    className="w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
+                    className="w-7 h-7 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center shadow-md active:scale-90 transition-all"
                     title="Edit caption"
                   >
                     <Pencil className="w-3.5 h-3.5" />
@@ -2776,7 +2776,7 @@ function PostsTab({ posts }: { posts: ElephantPost[] }) {
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(post)}
-                    className="w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center"
+                    className="w-7 h-7 rounded-full bg-black/60 hover:bg-red-600 text-white flex items-center justify-center shadow-md active:scale-90 transition-all"
                     title="Delete"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
