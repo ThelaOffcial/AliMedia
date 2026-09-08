@@ -641,19 +641,23 @@ export const DiscoverFeed: React.FC<DiscoverFeedProps> = ({
                   (!isPlaceholderName && e.name === post.elephantName)
               );
         const postElephantId = post.elephantId || linked?.id;
-        if (!postElephantId) return;
 
-        // Do not show followed elephants in the story line
-        if (isFollowing(postElephantId)) return;
+        // Untagged stories (no elephant selected) still belong in the tray —
+        // group them under the author's own profile instead of dropping
+        // them, since a story with no tag has no elephant to attach to.
+        const groupKey = postElephantId || (post.authorUid ? `author-${post.authorUid}` : null);
+        if (!groupKey) return;
 
-        const groupKey = postElephantId;
+        // Do not show followed elephants in the story line (only applies
+        // to real elephant-tagged groups — author groups are unaffected)
+        if (postElephantId && isFollowing(postElephantId)) return;
 
         if (!groupMap.has(groupKey)) {
           groupMap.set(groupKey, {
             elephantId: groupKey,
-            elephantName: post.elephantName || linked?.name || 'Elephant',
-            elephantSinhalaName: post.elephantSinhalaName || linked?.sinhalaName,
-            avatarPhoto: getElephantProfilePhoto(linked) || post.photoUrl,
+            elephantName: postElephantId ? (post.elephantName || linked?.name || 'Elephant') : (post.authorName || 'Community'),
+            elephantSinhalaName: postElephantId ? (post.elephantSinhalaName || linked?.sinhalaName) : undefined,
+            avatarPhoto: postElephantId ? (getElephantProfilePhoto(linked) || post.photoUrl) : (post.authorPhotoURL || post.photoUrl),
             coverPhoto: post.photoUrl,
             linkedElephant: linked,
             isTusker: linked?.type === 'tusker',
@@ -674,8 +678,8 @@ export const DiscoverFeed: React.FC<DiscoverFeedProps> = ({
         group.stories.push({
           id: post.id || `post-story-${Math.random()}`,
           elephantId: groupKey,
-          elephantName: post.elephantName || linked?.name || 'Elephant',
-          elephantSinhalaName: post.elephantSinhalaName || linked?.sinhalaName,
+          elephantName: postElephantId ? (post.elephantName || linked?.name || 'Elephant') : (post.authorName || 'Community'),
+          elephantSinhalaName: postElephantId ? (post.elephantSinhalaName || linked?.sinhalaName) : undefined,
           photoUrl: post.photoUrl,
           caption: post.caption,
           authorName: post.authorName,
