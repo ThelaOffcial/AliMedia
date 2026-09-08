@@ -47,6 +47,14 @@ function loadImageSize(src: string): Promise<{ width: number; height: number }> 
   });
 }
 
+function countWords(text: string): number {
+  const trimmed = text.trim();
+  if (!trimmed) return 0;
+  return trimmed.split(/\s+/).length;
+}
+
+const CAPTION_WORD_LIMIT = 5000;
+
 const EMOJI_PALETTE = [
   '🐘', '🌿', '🌳', '🌾', '🏞️', '🌅', '🌄', '☀️', '🌧️', '🌙',
   '❤️', '🧡', '💚', '💙', '🙏', '👏', '🔥', '✨', '🎉', '📸',
@@ -61,7 +69,7 @@ const RATIO_ICON: Record<PhotoAspectRatio, React.ReactNode> = {
   '4:3': <Rows3 className="w-3.5 h-3.5 rotate-90" />,
 };
 
-type Step = 'photo' | 'details';
+type Step = 'photo' | 'tag' | 'details';
 
 interface CreatePostModalProps {
   elephants: Elephant[];
@@ -88,7 +96,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
   const [selectedElephantId, setSelectedElephantId] = useState<string>(preselectedElephantId || '');
   const [elephantSearch, setElephantSearch] = useState<string>('');
-  const [showElephantSheet, setShowElephantSheet] = useState<boolean>(false);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [photoUrlInput, setPhotoUrlInput] = useState<string>('');
   const [useUrlMode, setUseUrlMode] = useState<boolean>(false);
@@ -127,8 +134,10 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
     return () => document.removeEventListener('mousedown', handler);
   }, [showEmojiPicker]);
 
+  const goToTag = () => { setStepDirection('forward'); setStep('tag'); };
   const goToDetails = () => { setStepDirection('forward'); setStep('details'); };
   const goToPhoto = () => { setStepDirection('back'); setStep('photo'); };
+  const goBackToTag = () => { setStepDirection('back'); setStep('tag'); };
 
   const processFile = async (file: File) => {
     if (file.size > 25 * 1024 * 1024) {
@@ -146,7 +155,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
         setPhotoPreview(compressedData);
         const size = await loadImageSize(compressedData);
         setAspectRatio(detectAspectRatio(size.width, size.height));
-        goToDetails();
+        goToTag();
       }
     } catch {
       const reader = new FileReader();
@@ -156,7 +165,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           setPhotoPreview(rawData);
           const size = await loadImageSize(rawData);
           setAspectRatio(detectAspectRatio(size.width, size.height));
-          goToDetails();
+          goToTag();
         }
       };
       reader.readAsDataURL(file);
@@ -187,7 +196,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
     setPhotoPreview(url);
     const size = await loadImageSize(url);
     setAspectRatio(detectAspectRatio(size.width, size.height));
-    goToDetails();
+    goToTag();
   };
 
   const insertEmoji = (emoji: string) => {
@@ -202,6 +211,16 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
       const pos = start + emoji.length;
       el.setSelectionRange(pos, pos);
     });
+  };
+
+  const handleCaptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const next = e.target.value;
+    // Only block growth once the word count would exceed the limit — never
+    // blocks deleting/editing text that's already within it.
+    if (countWords(next) > CAPTION_WORD_LIMIT && countWords(next) > countWords(caption)) {
+      return;
+    }
+    setCaption(next);
   };
 
   const filteredElephants = elephants.filter((el) => {
@@ -319,10 +338,14 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
     <div className="fixed inset-0 z-50 bg-black flex items-center justify-center sm:p-4 overflow-hidden">
       <div className="relative w-full h-full sm:h-auto sm:max-h-[94vh] sm:max-w-md bg-white dark:bg-[#0B1512] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col">
 
-        {/* Top bar — shared across both steps */}
+        {/* Top bar — shared across all steps */}
         <div className="flex items-center justify-between px-4 h-14 shrink-0 bg-white/95 dark:bg-[#0B1512]/95 backdrop-blur-md border-b border-zinc-200 dark:border-emerald-900/30 z-20">
-          {step === 'details' ? (
+          {step === 'tag' ? (
             <button onClick={goToPhoto} className="p-1.5 -ml-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-[#1A2C27] transition-colors cursor-pointer">
+              <ChevronLeft className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
+            </button>
+          ) : step === 'details' ? (
+            <button onClick={goBackToTag} className="p-1.5 -ml-1.5 rounded-full hover:bg-zinc-100 dark:hover:bg-[#1A2C27] transition-colors cursor-pointer">
               <ChevronLeft className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
             </button>
           ) : (
@@ -331,6 +354,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
           <div className="flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full transition-colors ${step === 'photo' ? 'bg-[#062E22] dark:bg-emerald-400' : 'bg-zinc-300 dark:bg-zinc-700'}`} />
+            <div className={`w-1.5 h-1.5 rounded-full transition-colors ${step === 'tag' ? 'bg-[#062E22] dark:bg-emerald-400' : 'bg-zinc-300 dark:bg-zinc-700'}`} />
             <div className={`w-1.5 h-1.5 rounded-full transition-colors ${step === 'details' ? 'bg-[#062E22] dark:bg-emerald-400' : 'bg-zinc-300 dark:bg-zinc-700'}`} />
           </div>
 
@@ -423,7 +447,89 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </div>
         )}
 
-        {/* STEP 2 — Details (image + caption + options) */}
+        {/* STEP 2 — Tag an elephant (optional, skippable) */}
+        {step === 'tag' && (
+          <div className={`flex-1 overflow-y-auto flex flex-col ${stepDirection === 'forward' ? 'animate-slideInRight' : 'animate-slideInLeft'}`}>
+            <div className="p-4 sm:p-5 pb-2 text-center shrink-0">
+              <h2 className="text-base font-extrabold text-zinc-900 dark:text-white">
+                {language === 'si' ? 'අලියෙකු tag කරන්නද?' : 'Tag an elephant?'}
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                {language === 'si'
+                  ? 'අනිවාර්ය නොවේ — tag කළොත් පමණක් එම අලියාගේ profile එකට පෝස්ට් එක පෙන්වයි'
+                  : "Optional — only tagged elephants get this post shared to their profile"}
+              </p>
+            </div>
+
+            <div className="px-4 sm:px-5 pb-2 shrink-0">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder={language === 'si' ? 'ඇතුන්ගේ නම් සොයන්න...' : 'Search elephant names...'}
+                  value={elephantSearch}
+                  onChange={(e) => setElephantSearch(e.target.value)}
+                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-[#121F1B] border border-zinc-300 dark:border-emerald-900/40 text-xs text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#062E22] dark:focus:ring-emerald-600"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 sm:px-5 space-y-1.5 no-scrollbar">
+              {filteredElephants.map((el) => {
+                const isSelected = el.id === selectedElephantId;
+                const bilingual = formatBilingualElephantName({ name: el.name, sinhalaName: el.sinhalaName }, language);
+                return (
+                  <div
+                    key={el.id}
+                    onClick={() => setSelectedElephantId(isSelected ? '' : el.id)}
+                    className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all ${
+                      isSelected
+                        ? 'bg-[#062E22] dark:bg-emerald-700 text-white shadow-sm'
+                        : 'bg-zinc-50 dark:bg-[#121F1B] text-zinc-800 dark:text-zinc-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-zinc-200/60 dark:border-emerald-900/30'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
+                        <img
+                          src={(el.photos?.find((p) => typeof p === 'string' && p.trim().length > 0)) || 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?auto=format&fit=crop&w=200&q=80'}
+                          alt={el.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-extrabold text-xs truncate leading-tight block">{bilingual}</span>
+                        <span className={`text-[10px] truncate block ${isSelected ? 'text-emerald-200' : 'text-zinc-500'}`}>
+                          {el.location || (language === 'si' ? 'ශ්‍රී ලංකාව' : 'Sri Lanka')}
+                        </span>
+                      </div>
+                    </div>
+                    {isSelected && <CheckCircle2 className="w-4 h-4 text-white shrink-0" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="p-4 border-t border-zinc-200 dark:border-emerald-900/30 bg-white dark:bg-[#0B1512] shrink-0 flex gap-2">
+              <button
+                onClick={() => { setSelectedElephantId(''); goToDetails(); }}
+                className="flex-1 py-3 rounded-2xl bg-zinc-100 dark:bg-[#121F1B] border border-zinc-200 dark:border-emerald-900/40 text-zinc-700 dark:text-zinc-300 text-xs font-bold hover:bg-zinc-200 dark:hover:bg-[#1A2C27] transition-all cursor-pointer active:scale-98"
+              >
+                {language === 'si' ? 'මඟ හරින්න' : 'Skip for now'}
+              </button>
+              <button
+                onClick={goToDetails}
+                className="flex-1 py-3 rounded-2xl bg-[#062E22] dark:bg-emerald-700 text-white text-xs font-bold hover:opacity-90 transition-all cursor-pointer active:scale-98"
+              >
+                {selectedElephantObj
+                  ? (language === 'si' ? 'ඉදිරියට' : 'Continue')
+                  : (language === 'si' ? 'ඉදිරියට' : 'Continue')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3 — Details (image + caption + options) */}
         {step === 'details' && (
           <div className={`flex-1 overflow-y-auto ${stepDirection === 'forward' ? 'animate-slideInRight' : 'animate-slideInLeft'}`}>
             {/* Image with overlaid ratio switcher */}
@@ -454,7 +560,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
 
               {/* Elephant tag pill overlaid on the image, Instagram-style */}
               <button
-                onClick={() => setShowElephantSheet(true)}
+                onClick={goBackToTag}
                 className="absolute top-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 hover:bg-black/70 text-white text-[10px] font-bold backdrop-blur-md transition-all cursor-pointer max-w-[65%]"
               >
                 <Tag className="w-3 h-3 shrink-0" />
@@ -471,12 +577,11 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
               <div className="relative">
                 <textarea
                   ref={captionRef}
-                  rows={3}
-                  maxLength={500}
+                  rows={5}
                   placeholder={language === 'si' ? 'මෙම අවස්ථාව ගැන යමක් ලියන්න... 🐘' : 'Write a caption or memory... 🐘'}
                   value={caption}
-                  onChange={(e) => setCaption(e.target.value)}
-                  className="w-full px-3.5 py-2.5 pb-9 rounded-2xl bg-zinc-50 dark:bg-[#121F1B] border border-zinc-300 dark:border-emerald-900/40 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#062E22] dark:focus:ring-emerald-600 resize-none leading-relaxed"
+                  onChange={handleCaptionChange}
+                  className="w-full px-3.5 py-2.5 pb-9 rounded-2xl bg-zinc-50 dark:bg-[#121F1B] border border-zinc-300 dark:border-emerald-900/40 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#062E22] dark:focus:ring-emerald-600 resize-y min-h-[110px] leading-relaxed"
                 />
                 <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between">
                   <button
@@ -486,7 +591,9 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                   >
                     <SmilePlus className="w-4 h-4" />
                   </button>
-                  <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono">{caption.length}/500</span>
+                  <span className={`text-[10px] font-mono ${countWords(caption) >= CAPTION_WORD_LIMIT ? 'text-red-500 font-bold' : 'text-zinc-400 dark:text-zinc-500'}`}>
+                    {countWords(caption)}/{CAPTION_WORD_LIMIT} {language === 'si' ? 'වචන' : 'words'}
+                  </span>
                 </div>
 
                 {showEmojiPicker && (
@@ -609,80 +716,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           </div>
         )}
 
-        {/* Elephant tag bottom sheet */}
-        {showElephantSheet && (
-          <div
-            className="absolute inset-0 z-30 bg-black/50 backdrop-blur-sm flex items-end sm:items-center sm:justify-center animate-fadeIn"
-            onClick={(e) => { if (e.target === e.currentTarget) setShowElephantSheet(false); }}
-          >
-            <div className="w-full sm:max-w-sm bg-white dark:bg-[#0B1512] rounded-t-3xl sm:rounded-3xl p-4 max-h-[70vh] flex flex-col">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-extrabold text-zinc-900 dark:text-white">
-                  {language === 'si' ? 'අලියා tag කරන්න' : 'Tag an elephant'}
-                </h3>
-                <button onClick={() => setShowElephantSheet(false)} className="p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-[#1A2C27] cursor-pointer">
-                  <X className="w-4 h-4 text-zinc-500" />
-                </button>
-              </div>
-
-              <div className="relative mb-2 shrink-0">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type="text"
-                  autoFocus
-                  placeholder={language === 'si' ? 'ඇතුන්ගේ නම් සොයන්න...' : 'Search elephant names...'}
-                  value={elephantSearch}
-                  onChange={(e) => setElephantSearch(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-[#121F1B] border border-zinc-300 dark:border-emerald-900/40 text-xs text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#062E22] dark:focus:ring-emerald-600"
-                />
-              </div>
-
-              {selectedElephantObj && (
-                <button
-                  onClick={() => { setSelectedElephantId(''); }}
-                  className="mb-2 self-start text-[11px] font-bold text-red-500 hover:underline shrink-0 cursor-pointer"
-                >
-                  {language === 'si' ? 'Tag එක ඉවත් කරන්න' : 'Remove current tag'}
-                </button>
-              )}
-
-              <div className="overflow-y-auto space-y-1.5 pr-1 no-scrollbar flex-1">
-                {filteredElephants.map((el) => {
-                  const isSelected = el.id === selectedElephantId;
-                  const bilingual = formatBilingualElephantName({ name: el.name, sinhalaName: el.sinhalaName }, language);
-                  return (
-                    <div
-                      key={el.id}
-                      onClick={() => { setSelectedElephantId(el.id); setShowElephantSheet(false); }}
-                      className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all ${
-                        isSelected
-                          ? 'bg-[#062E22] dark:bg-emerald-700 text-white shadow-sm'
-                          : 'bg-zinc-50 dark:bg-[#121F1B] text-zinc-800 dark:text-zinc-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-zinc-200/60 dark:border-emerald-900/30'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-zinc-800 shrink-0">
-                          <img
-                            src={(el.photos?.find((p) => typeof p === 'string' && p.trim().length > 0)) || 'https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?auto=format&fit=crop&w=200&q=80'}
-                            alt={el.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="font-extrabold text-xs truncate leading-tight block">{bilingual}</span>
-                          <span className={`text-[10px] truncate block ${isSelected ? 'text-emerald-200' : 'text-zinc-500'}`}>
-                            {el.location || (language === 'si' ? 'ශ්‍රී ලංකාව' : 'Sri Lanka')}
-                          </span>
-                        </div>
-                      </div>
-                      {isSelected && <CheckCircle2 className="w-4 h-4 text-white shrink-0" />}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
