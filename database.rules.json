@@ -122,6 +122,21 @@
           ".validate": "newData.hasChildren(['translated','updatedAt']) && newData.child('translated').isString() && newData.child('translated').val().length <= 6000 && newData.child('updatedAt').isNumber()"
         }
       }
+    },
+    "platform_feedback": {
+      ".read": true,
+      ".indexOn": ["createdAt"],
+      "$id": {
+        ".write": "auth != null && ((!data.exists() && newData.exists() && newData.child('authorUid').val() === auth.uid) || (data.exists() && newData.exists() && (data.child('authorUid').val() === auth.uid || root.child('admins').child(auth.uid).exists())) || (data.exists() && !newData.exists() && (data.child('authorUid').val() === auth.uid || root.child('admins').child(auth.uid).exists())))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['type', 'message', 'authorUid', 'authorName', 'createdAt']) && (newData.child('type').val() === 'suggestion' || newData.child('type').val() === 'complaint') && newData.child('message').isString() && newData.child('message').val().length > 0 && newData.child('message').val().length <= 2000)"
+      }
+    },
+    "platform_feedback_likes": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['likesCount', 'likedBy']) && newData.child('likesCount').isNumber() && newData.child('likesCount').val() >= 0"
+      }
     }
   }
 }

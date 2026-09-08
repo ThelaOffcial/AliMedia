@@ -24,8 +24,10 @@ import {
   MessageCircle,
   X,
   ChevronRight,
+  MessageSquarePlus,
 } from 'lucide-react';
 import { VerifiedBadge } from './VerifiedBadge';
+import { FeedbackScreen } from './FeedbackScreen';
 import { isAliMediaTeamEmail, ALI_MEDIA_LOGO_URL, ALI_MEDIA_DISPLAY_NAME } from '../utils/aliMediaTeam';
 import { ElephantIcon } from './ElephantIcon';
 import { compressImageFile } from '../utils/imageCompressor';
@@ -106,6 +108,7 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -1358,6 +1361,38 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
                 </div>
               )}
 
+              {/* Support — feedback & suggestions board, open to everyone */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 px-1">
+                  {language === 'si' ? 'සහාය' : 'Support'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSettings(false);
+                    setShowFeedback(true);
+                  }}
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-zinc-200 dark:border-white/10 hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                      <MessageSquarePlus className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[#062E22] dark:text-white">
+                        {language === 'si' ? 'අදහස් සහ යෝජනා' : 'Feedback & Suggestions'}
+                      </p>
+                      <p className="text-[11px] text-zinc-500">
+                        {language === 'si'
+                          ? 'පැමිණිලි හෝ නව අදහස් බෙදාගන්න'
+                          : 'Report issues or suggest new ideas'}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+                </button>
+              </div>
+
               {/* Danger zone — self-serve delete */}
               {user && !user.isAnonymous && !isTeam && (
                 <div className="space-y-2 pt-1">
@@ -1438,6 +1473,10 @@ export const UserProfileScreen: React.FC<UserProfileScreenProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {showFeedback && (
+        <FeedbackScreen language={language} onClose={() => setShowFeedback(false)} />
       )}
     </div>
   );
