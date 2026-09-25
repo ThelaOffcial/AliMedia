@@ -8,6 +8,8 @@ export interface StoryDraftRequest {
   kind: StoryDraftKind;
   language: StoryDraftLanguage;
   topic?: string;
+  researchUrls?: string[];
+  youtubeUrl?: string;
 }
 
 export interface StoryDraftResponse {

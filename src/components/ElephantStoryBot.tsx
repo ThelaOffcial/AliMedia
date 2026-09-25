@@ -61,6 +61,8 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
   const [kind, setKind] = useState<DraftKind>('facts');
   const [language, setLanguage] = useState<ContentLanguage>('en');
   const [topic, setTopic] = useState('');
+  const [researchUrlsText, setResearchUrlsText] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [draft, setDraft] = useState<StoryDraft | null>(null);
   const [draftSources, setDraftSources] = useState<Array<{ title: string; publisher?: string; url?: string }>>([]);
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
@@ -103,6 +105,8 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
         kind,
         language,
         topic: topic.trim(),
+        researchUrls: researchUrlsText.split(/[\n,]+/).map((url) => url.trim()).filter(Boolean).slice(0, 5),
+        youtubeUrl: youtubeUrl.trim(),
       });
       setDraft({ title: result.title, caption: result.caption, imagePrompt: result.imagePrompt });
       setDraftSources(result.sources || []);
@@ -149,7 +153,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
         throw new Error('The selected image is not available as a secure hosted image.');
       }
 
-      const referenceBlock = safeSources.length ? `\n\nSources from the AliMedia record:\n${safeSources.join('\n')}` : '';
+      const referenceBlock = safeSources.length ? `\n\nResearch sources:\n${safeSources.join('\n')}` : '';
       const imageDisclosure = imageIsGenerated ? '\n\nAI-generated illustration; this is not a documentary photograph.' : '';
       const caption = `${draft.title.trim()}\n\n${draft.caption.trim()}${imageDisclosure}${referenceBlock}`.trim();
 
@@ -176,6 +180,8 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
       setDraftSources([]);
       setGeneratedImageUrl('');
       setTopic('');
+      setResearchUrlsText('');
+      setYoutubeUrl('');
       setImageUrl(defaultImage);
       setImageIsGenerated(false);
     } catch (err: any) {
@@ -192,7 +198,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
           <Bot className="h-5 w-5 text-pine-700" /> Elephant Story Bot
         </h1>
         <p className="mt-1 text-xs leading-relaxed text-ink-500">
-          Create an editable elephant facts, history, or story draft. Nothing is published until you review it and choose Publish.
+          Research elephants online, create an editable post with source links, then review it and choose Publish to add it to the AliMedia feed.
         </p>
       </header>
 
@@ -242,11 +248,21 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
 
               <label className="block space-y-1.5">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-ink-600">Topic or angle (optional)</span>
-                <input className={fieldClass} value={topic} onChange={(event) => setTopic(event.target.value)} maxLength={240} placeholder="For example: a Perahera memory or a special feature" />
+                <input className={fieldClass} value={topic} onChange={(event) => setTopic(event.target.value)} maxLength={240} placeholder="For example: this elephant’s Perahera role or conservation" />
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-ink-600">Research websites (optional)</span>
+                <textarea className={`${fieldClass} min-h-20 resize-y`} value={researchUrlsText} onChange={(event) => setResearchUrlsText(event.target.value)} maxLength={8000} placeholder="Paste up to 5 public elephant-related article or reference URLs; one per line" />
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-ink-600">Public YouTube video (optional)</span>
+                <input className={fieldClass} type="url" value={youtubeUrl} onChange={(event) => setYoutubeUrl(event.target.value)} maxLength={1000} placeholder="https://www.youtube.com/watch?v=…" />
+                <span className="block text-[10px] text-ink-500">Live Google Search requires a paid Gemini API tier; usage limits and charges may apply. Only public YouTube videos are supported. <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank" rel="noreferrer" className="font-semibold underline">See current pricing</a>.</span>
               </label>
 
               <div className="rounded-xl border border-pine-100 bg-pine-50 p-3 text-xs leading-relaxed text-pine-950">
-                <strong>Fact-check safeguard:</strong> factual drafts use the selected elephant’s saved AliMedia record and its listed references. Imaginative stories are labeled as fiction. The generator is not a substitute for checking the record.
+                <strong>Research safeguard:</strong> drafts search live web sources and include available citations. Check every factual claim and source before publishing; fiction is labeled as fiction.
               </div>
 
               <button
@@ -320,7 +336,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
 
           {draftSources.length > 0 ? (
             <div className="rounded-xl border border-parchment-200 bg-parchment-50 p-3">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-600">References recorded for this elephant</p>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-ink-600">Research sources for this draft</p>
               <ul className="space-y-1.5">
                 {draftSources.map((source, index) => (
                   <li key={`${source.title}-${index}`} className="text-xs text-ink-700">
