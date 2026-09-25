@@ -49,6 +49,7 @@ import {
   ShieldAlert,
   CheckCircle2,
   MessageSquareWarning,
+  Bot,
 } from 'lucide-react';
 import { Language } from '../utils/translations';
 import { LOGO_URL } from './Navbar';
@@ -71,6 +72,7 @@ import {
   getAdminAuthErrorMessage,
 } from '../firebase/adminAuthService';
 import { calcAgeFromBirth, calcAgeBetween } from '../utils/ageCalculator';
+import { ElephantStoryBot } from './ElephantStoryBot';
 
 // -------------------------------------------------------------
 // Props
@@ -97,7 +99,7 @@ interface AdminPanelProps {
   language: Language;
 }
 
-type AdminTab = 'dashboard' | 'elephants' | 'events' | 'posts' | 'moderation' | 'users';
+type AdminTab = 'dashboard' | 'elephants' | 'events' | 'posts' | 'storybot' | 'moderation' | 'users';
 
 const EMPTY_ELEPHANT_FORM = {
   name: '',
@@ -147,6 +149,7 @@ const NAV_ITEMS: { id: AdminTab; label: string; icon: React.ElementType }[] = [
   { id: 'elephants', label: 'Elephants', icon: PawPrint },
   { id: 'events', label: 'Events', icon: CalendarDays },
   { id: 'posts', label: 'Posts', icon: Images },
+  { id: 'storybot', label: 'Story Bot', icon: Bot },
   { id: 'moderation', label: 'Moderation', icon: ShieldAlert },
   { id: 'users', label: 'Users', icon: UsersIcon },
 ];
@@ -753,6 +756,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <EventsTab elephants={elephants} events={events} onSaveEvent={onSaveEvent} onDeleteEvent={onDeleteEvent} />
             )}
             {activeTab === 'posts' && <PostsTab posts={posts} />}
+            {activeTab === 'storybot' && <ElephantStoryBot elephants={elephants} adminUser={adminUser} />}
             {activeTab === 'moderation' && <ModerationTab adminUid={adminUser?.uid || ''} />}
             {activeTab === 'users' && <UsersTab />}
           </div>

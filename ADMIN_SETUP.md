@@ -64,6 +64,51 @@ Cloudinary is hardcoded in `src/firebase/cloudinaryService.ts`:
 There is no Cloudinary settings screen in the admin console - if these ever
 need to change, edit that file directly.
 
+## Story Bot (admin-only, on-demand publishing)
+
+The Admin Console's **Story Bot** tab creates an editable draft from an
+elephant's AliMedia registry record. It can optionally generate an illustrative
+image; an administrator must review the draft and click **Publish to AliMedia**
+before it is added to the community feed. Generated images are uploaded to the
+existing Cloudinary unsigned preset. An AI-image disclosure is appended to the
+caption when the bot generates an illustration.
+
+### One-time setup
+
+0. Merge the Story Bot change and deploy the updated AliMedia web app through its
+   existing host (for example, the repository's current Vercel/Netlify flow).
+   If deploying manually, build the site with `npm run build` and publish the
+   resulting `dist/` directory as usual.
+1. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/apikey).
+2. From the repository root, select the Firebase project (`aliapp-e5196`) and
+   store the key as a Firebase Functions secret (Firebase CLI prompts for the
+   secret value; do not commit it to the repository):
+
+   ```bash
+   firebase use aliapp-e5196
+   firebase functions:secrets:set GEMINI_API_KEY
+   firebase deploy --only functions
+   ```
+
+3. Confirm Cloud Functions and the selected Gemini API have the required Google
+   Cloud project billing/API access enabled. Text draft generation uses
+   `gemini-3.8-flash`; optional image generation uses `gemini-3.1-flash-image`.
+4. Sign into AliMedia's Admin Console with an account listed under
+   `/admins/{uid}`, open **Story Bot**, and generate a draft.
+
+The Gemini key is read only by the server-side callable functions and is never
+sent to the browser. Those functions re-check the caller against the Firebase
+`/admins` allowlist, apply a per-admin rate limit, and send Gemini requests with
+`store: false`. Story-only posts follow AliMedia's existing 24-hour expiry;
+regular feed posts stay in the community feed. This bot does not publish on a
+timer and never auto-publishes generated drafts.
+
+### Updating the bot functions
+
+After code changes, deploy with `firebase deploy --only functions`. To rotate
+the Gemini key, run `firebase functions:secrets:set GEMINI_API_KEY` again and
+redeploy the functions that use it.
+
 ## Data paths (Realtime Database)
 
 | Path                 | Purpose                          |
