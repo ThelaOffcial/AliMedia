@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import type { Elephant, ElephantPost } from '../types/elephant';
 import { addElephantPost } from '../firebase/postService';
-import { uploadPhotoToCloudinary } from '../firebase/cloudinaryService';
 import { generateElephantPostDraft, generateElephantPostImage } from '../firebase/storyBotService';
 
 interface Props {
@@ -47,13 +46,6 @@ function profileImage(elephant?: Elephant | null): string {
   return elephant?.profilePhoto || elephant?.photos?.[0] || elephant?.cloudinaryPhotos?.[0]?.url || '';
 }
 
-function base64ImageFile(base64: string, mimeType: string, fileName: string): File {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return new File([bytes], fileName, { type: mimeType || 'image/png' });
-}
-
 function referencesForCaption(sources: DraftSource[]) {
   return sources
     .filter((source) => source.url && /^https?:\/\//i.test(source.url))
@@ -71,7 +63,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
   const [topic, setTopic] = useState('');
   const [draft, setDraft] = useState<StoryDraft | null>(null);
   const [draftSources, setDraftSources] = useState<Array<{ title: string; publisher?: string; url?: string }>>([]);
-  const [generatedImage, setGeneratedImage] = useState<{ base64: string; mimeType: string } | null>(null);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [imageIsGenerated, setImageIsGenerated] = useState(false);
   const [storyOnly, setStoryOnly] = useState(false);
@@ -81,9 +73,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
 
   const selectedElephant = sortedElephants.find((elephant) => elephant.id === elephantId) || null;
   const defaultImage = profileImage(selectedElephant);
-  const activePreview = generatedImage
-    ? `data:${generatedImage.mimeType};base64,${generatedImage.base64}`
-    : imageUrl || defaultImage;
+  const activePreview = generatedImageUrl || imageUrl || defaultImage;
   const safeSources = useMemo(() => referencesForCaption(draftSources), [draftSources]);
 
   useEffect(() => {
@@ -91,11 +81,11 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
   }, [elephantId, sortedElephants]);
 
   useEffect(() => {
-    if (!generatedImage) {
+    if (!generatedImageUrl) {
       setImageUrl(defaultImage);
       setImageIsGenerated(false);
     }
-  }, [defaultImage, generatedImage]);
+  }, [defaultImage, generatedImageUrl]);
 
   const clearNotices = () => {
     setError('');
@@ -106,7 +96,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
     if (!selectedElephant?.id) return;
     clearNotices();
     setBusy('draft');
-    setGeneratedImage(null);
+    setGeneratedImageUrl('');
     try {
       const result = await generateElephantPostDraft({
         elephantId: selectedElephant.id,
@@ -120,7 +110,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
       setImageIsGenerated(false);
       setSuccess('Draft ready. Check every fact and make any edits before publishing.');
     } catch (err: any) {
-      setError(err?.message || 'Could not generate a draft. Check that the Gemini API secret is configured.');
+      setError(err?.message || 'Could not generate a draft. Please try again.');
     } finally {
       setBusy(null);
     }
@@ -135,9 +125,9 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
         elephantId: selectedElephant.id,
         prompt: draft.imagePrompt,
       });
-      setGeneratedImage({ base64: result.base64, mimeType: result.mimeType || 'image/png' });
+      setGeneratedImageUrl(result.url);
       setImageIsGenerated(true);
-      setSuccess('AI illustration ready. It will be uploaded when you publish.');
+      setSuccess('AI illustration ready and uploaded. Review it before publishing.');
     } catch (err: any) {
       setError(err?.message || 'Could not generate an illustration.');
     } finally {
@@ -148,22 +138,13 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
   const publish = async () => {
     if (!selectedElephant?.id || !draft || !adminUser.uid) return;
     clearNotices();
-    if (!generatedImage && !imageUrl) {
+    if (!generatedImageUrl && !imageUrl) {
       setError('This feed needs an image. Generate an illustration or select an elephant with a profile photo.');
       return;
     }
     setBusy('publish');
     try {
-      let hostedImageUrl = imageUrl;
-      if (generatedImage) {
-        const file = base64ImageFile(
-          generatedImage.base64,
-          generatedImage.mimeType,
-          `alimedia-${selectedElephant.id}-${Date.now()}.png`,
-        );
-        const uploaded = await uploadPhotoToCloudinary(file);
-        hostedImageUrl = uploaded.url;
-      }
+      const hostedImageUrl = generatedImageUrl || imageUrl;
       if (!hostedImageUrl || !/^https:\/\//i.test(hostedImageUrl)) {
         throw new Error('The selected image is not available as a secure hosted image.');
       }
@@ -193,7 +174,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
       setSuccess('Published to the AliMedia community feed.');
       setDraft(null);
       setDraftSources([]);
-      setGeneratedImage(null);
+      setGeneratedImageUrl('');
       setTopic('');
       setImageUrl(defaultImage);
       setImageIsGenerated(false);
@@ -228,7 +209,13 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
             <>
               <label className="block space-y-1.5">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-ink-600">Elephant</span>
-                <select className={fieldClass} value={elephantId} onChange={(event) => { setElephantId(event.target.value); setDraft(null); setGeneratedImage(null); }}>
+                <select className={fieldClass} value={elephantId} onChange={(event) => {
+                  setElephantId(event.target.value);
+                  setDraft(null);
+                  setDraftSources([]);
+                  setGeneratedImageUrl('');
+                  setImageIsGenerated(false);
+                }}>
                   {sortedElephants.map((elephant) => (
                     <option key={elephant.id} value={elephant.id}>{elephant.name}{elephant.sinhalaName ? ` · ${elephant.sinhalaName}` : ''}</option>
                   ))}
@@ -371,7 +358,7 @@ export const ElephantStoryBot: React.FC<Props> = ({ elephants, adminUser }) => {
               disabled={busy !== null || !draft.title.trim() || !draft.caption.trim() || (!activePreview && !imageUrl)}
             >
               {busy === 'publish' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              {busy === 'publish' ? (generatedImage ? 'Uploading and publishing…' : 'Publishing…') : 'Publish to AliMedia'}
+              {busy === 'publish' ? 'Publishing…' : 'Publish to AliMedia'}
             </button>
           </div>
         </section>
