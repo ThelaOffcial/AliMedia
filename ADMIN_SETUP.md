@@ -66,12 +66,13 @@ need to change, edit that file directly.
 
 ## Story Bot (admin-only, on-demand publishing)
 
-The Admin Console's **Story Bot** tab creates an editable draft from an
-elephant's AliMedia registry record. It can optionally generate an illustrative
-image; an administrator must review the draft and click **Publish to AliMedia**
-before it is added to the community feed. Generated images are created and
-uploaded server-side to the existing Cloudinary unsigned preset. An AI-image
-disclosure is appended to the caption when the bot generates an illustration.
+The Admin Console's **Story Bot** tab researches elephant-related information
+with Google Search, then creates an editable draft with source links. An admin
+can add public website URLs and a public YouTube video for the research. It can
+also generate an illustrative image, which is uploaded server-side to the
+existing Cloudinary unsigned preset. An administrator must review the draft and
+click **Publish to AliMedia** before it is added to the community feed. Generated
+illustrations are identified as AI-generated in the published caption.
 
 ### Hosting and secrets
 
@@ -79,19 +80,23 @@ The Story Bot's private API runs as Vercel Functions in the existing `ali-media`
 project, so Firebase can remain on the Spark plan. Both required server-side
 settings already exist in Vercel's **Production** environment:
 
-- `GEMINI_API_KEY` — used only for server-side draft and illustration generation.
+- `GEMINI_API_KEY` — used only for server-side research, draft and illustration generation.
 - `FIREBASE_SERVICE_ACCOUNT_KEY` — used only to verify signed-in admins, read
   elephant records, and enforce the rate limit in Realtime Database.
 
-No new API key, Firebase plan change, or Firebase Functions deployment is
-needed. Merge the Vercel backend change to `main`; the connected Vercel project
-will deploy it automatically. Do not expose or commit either secret. Gemini
-usage may be subject to Google's account quotas or charges.
+No Firebase plan change or Firebase Functions deployment is needed. The
+connected Vercel project deploys changes merged to `main`. Do not expose or
+commit either secret. **Google Search grounding is not available on Google's
+free Gemini API tier.** On a paid Gemini API account, Google currently includes
+5,000 Search requests per month, then charges $14 per 1,000 requests; Gemini
+model usage and quotas also apply. See [Google's pricing page](https://ai.google.dev/gemini-api/docs/pricing)
+for current rates. Only public YouTube videos are supported by the video input.
 
 Each API call verifies the Firebase ID token and checks the caller against the
 `/admins/{uid}` allowlist. Draft and image generation are limited to eight calls
-per admin per minute. Requests to Gemini use `store: false`. Story-only posts
-follow AliMedia's existing 24-hour expiry; regular feed posts stay in the
+per admin per minute. Requests to Gemini use `store: false`. Verify each
+source-backed fact in the editable review screen before publishing. Story-only
+posts follow AliMedia's existing 24-hour expiry; regular feed posts stay in the
 community feed. The bot does not publish on a timer and never auto-publishes.
 
 ### Updating the bot backend
