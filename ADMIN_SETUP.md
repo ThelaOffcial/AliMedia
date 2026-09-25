@@ -75,6 +75,10 @@ caption when the bot generates an illustration.
 
 ### One-time setup
 
+0. Merge the Story Bot change and deploy the updated AliMedia web app through its
+   existing host (for example, the repository's current Vercel/Netlify flow).
+   If deploying manually, build the site with `npm run build` and publish the
+   resulting `dist/` directory as usual.
 1. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/apikey).
 2. From the repository root, select the Firebase project (`aliapp-e5196`) and
    store the key as a Firebase Functions secret (Firebase CLI prompts for the
