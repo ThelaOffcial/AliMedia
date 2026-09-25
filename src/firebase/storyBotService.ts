@@ -1,7 +1,4 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import app from './config';
-
-const functions = getFunctions(app, 'us-central1');
+import { auth } from './config';
 
 export type StoryDraftKind = 'facts' | 'history' | 'story';
 export type StoryDraftLanguage = 'en' | 'si';
@@ -20,28 +17,39 @@ export interface StoryDraftResponse {
   sources: Array<{ title: string; publisher?: string; url?: string }>;
 }
 
-export async function generateElephantPostDraft(
-  request: StoryDraftRequest,
-): Promise<StoryDraftResponse> {
-  const callable = httpsCallable<StoryDraftRequest, StoryDraftResponse>(functions, 'generateElephantPostDraft');
-  const response = await callable(request);
-  return response.data;
-}
-
 export interface StoryImageRequest {
   elephantId: string;
   prompt: string;
 }
 
 export interface StoryImageResponse {
-  base64: string;
-  mimeType: string;
+  url: string;
 }
 
-export async function generateElephantPostImage(
-  request: StoryImageRequest,
-): Promise<StoryImageResponse> {
-  const callable = httpsCallable<StoryImageRequest, StoryImageResponse>(functions, 'generateElephantPostImage');
-  const response = await callable(request);
-  return response.data;
+type StoryBotEndpoint = '/api/story-bot-draft' | '/api/story-bot-image';
+
+async function postToStoryBot<TInput, TOutput>(endpoint: StoryBotEndpoint, body: TInput): Promise<TOutput> {
+  const user = auth.currentUser;
+  if (!user || user.isAnonymous) throw new Error('Please sign in as an AliMedia admin.');
+  const idToken = await user.getIdToken();
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+    body: JSON.stringify(body),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result?.error || 'Story Bot request failed.');
+  return result as TOutput;
+}
+
+export function generateElephantPostDraft(request: StoryDraftRequest): Promise<StoryDraftResponse> {
+  return postToStoryBot<StoryDraftRequest, StoryDraftResponse>('/api/story-bot-draft', request);
+}
+
+export function generateElephantPostImage(request: StoryImageRequest): Promise<StoryImageResponse> {
+  return postToStoryBot<StoryImageRequest, StoryImageResponse>('/api/story-bot-image', request);
 }

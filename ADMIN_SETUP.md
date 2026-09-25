@@ -69,45 +69,36 @@ need to change, edit that file directly.
 The Admin Console's **Story Bot** tab creates an editable draft from an
 elephant's AliMedia registry record. It can optionally generate an illustrative
 image; an administrator must review the draft and click **Publish to AliMedia**
-before it is added to the community feed. Generated images are uploaded to the
-existing Cloudinary unsigned preset. An AI-image disclosure is appended to the
-caption when the bot generates an illustration.
+before it is added to the community feed. Generated images are created and
+uploaded server-side to the existing Cloudinary unsigned preset. An AI-image
+disclosure is appended to the caption when the bot generates an illustration.
 
-### One-time setup
+### Hosting and secrets
 
-0. Merge the Story Bot change and deploy the updated AliMedia web app through its
-   existing host (for example, the repository's current Vercel/Netlify flow).
-   If deploying manually, build the site with `npm run build` and publish the
-   resulting `dist/` directory as usual.
-1. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/apikey).
-2. From the repository root, select the Firebase project (`aliapp-e5196`) and
-   store the key as a Firebase Functions secret (Firebase CLI prompts for the
-   secret value; do not commit it to the repository):
+The Story Bot's private API runs as Vercel Functions in the existing `ali-media`
+project, so Firebase can remain on the Spark plan. Both required server-side
+settings already exist in Vercel's **Production** environment:
 
-   ```bash
-   firebase use aliapp-e5196
-   firebase functions:secrets:set GEMINI_API_KEY
-   firebase deploy --only functions
-   ```
+- `GEMINI_API_KEY` — used only for server-side draft and illustration generation.
+- `FIREBASE_SERVICE_ACCOUNT_KEY` — used only to verify signed-in admins, read
+  elephant records, and enforce the rate limit in Realtime Database.
 
-3. Confirm Cloud Functions and the selected Gemini API have the required Google
-   Cloud project billing/API access enabled. Text draft generation uses
-   `gemini-3.8-flash`; optional image generation uses `gemini-3.1-flash-image`.
-4. Sign into AliMedia's Admin Console with an account listed under
-   `/admins/{uid}`, open **Story Bot**, and generate a draft.
+No new API key, Firebase plan change, or Firebase Functions deployment is
+needed. Merge the Vercel backend change to `main`; the connected Vercel project
+will deploy it automatically. Do not expose or commit either secret. Gemini
+usage may be subject to Google's account quotas or charges.
 
-The Gemini key is read only by the server-side callable functions and is never
-sent to the browser. Those functions re-check the caller against the Firebase
-`/admins` allowlist, apply a per-admin rate limit, and send Gemini requests with
-`store: false`. Story-only posts follow AliMedia's existing 24-hour expiry;
-regular feed posts stay in the community feed. This bot does not publish on a
-timer and never auto-publishes generated drafts.
+Each API call verifies the Firebase ID token and checks the caller against the
+`/admins/{uid}` allowlist. Draft and image generation are limited to eight calls
+per admin per minute. Requests to Gemini use `store: false`. Story-only posts
+follow AliMedia's existing 24-hour expiry; regular feed posts stay in the
+community feed. The bot does not publish on a timer and never auto-publishes.
 
-### Updating the bot functions
+### Updating the bot backend
 
-After code changes, deploy with `firebase deploy --only functions`. To rotate
-the Gemini key, run `firebase functions:secrets:set GEMINI_API_KEY` again and
-redeploy the functions that use it.
+After code changes, merge to `main` and Vercel will create a production
+deployment. If a required Vercel secret is rotated or changed, create a new
+production deployment so the server functions receive the updated setting.
 
 ## Data paths (Realtime Database)
 
